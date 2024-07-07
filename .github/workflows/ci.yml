@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install flake8
+
+      - name: Run flake8
+        run: |
+          source venv/bin/activate
+          flake8 .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and push
+        run: sudo docker-compose -f bike_rental/docker/docker-compose.yml build
+
+      - name: Run Docker Compose
+        run: sudo docker-compose -f bike_rental/docker/docker-compose.yml up -d
+
+      - name: Run tests
+        run: |
+          sudo docker-compose -f bike_rental/docker/docker-compose.yml exec -T web python manage.py makemigrations
+          sudo docker-compose -f bike_rental/docker/docker-compose.yml exec -T web python manage.py migrate
+          sudo docker compose -f bike_rental/docker/docker-compose.yml exec -T web python manage.py collectstatic --noinput
+          sudo docker-compose -f bike_rental/docker/docker-compose.yml exec -T web pytest
+
+      - name: Shutdown Docker Compose
+        run: sudo docker-compose -f bike_rental/docker/docker-compose.yml down
