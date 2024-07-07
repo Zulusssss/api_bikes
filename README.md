@@ -7,7 +7,7 @@
 1. Клонируйте репозиторий:
     ```bash
     git clone https://your-repository-url.git
-    cd api_bikes/bike_rental
+    cd api_bikes
     ```
 
 2. Создайте и активируйте виртуальное окружение:
@@ -23,6 +23,7 @@
 
 4. Выполните миграции:
     ```bash
+    cd bike_rental
     python manage.py makemigrations
     python manage.py migrate
     ```
@@ -36,7 +37,7 @@
 
 1. Перейдите в директорию:
     ```bash
-    cd api_bikes/bike_rental
+    cd api_bikes/bike_rental/docker
     ```
 
 2. Запустите контейнеры:
@@ -46,8 +47,8 @@
 
 3. Выполните миграции:
     ```bash
-    docker compose -f docker/docker-compose.yml exec web python manage.py makemigrations
-    docker compose -f docker/docker-compose.yml exec web python manage.py migrate
+    docker compose exec web python manage.py makemigrations
+    docker compose exec web python manage.py migrate
     ```
 Приложение будет доступно по адресу `http://localhost:8000`
 
@@ -74,8 +75,10 @@ Content-Type: application/json
     "email": "testuser@example.com",
     "password": "testpassword"
 }
+```
 
 #### Авторизация пользователя
+```http
 POST /api/users/token/
 Content-Type: application/json
 
@@ -83,20 +86,28 @@ Content-Type: application/json
     "username": "testuser",
     "password": "testpassword"
 }
+```
 
 #### Получение списка доступных велосипедов
+```http
 GET /api/bikes/
 Authorization: Bearer <token>
+```
 
 #### Аренда велосипеда
+```http
 POST /api/rentals/rent/
 Authorization: Bearer <token>
-Content-Type: application/json
+```
 
 #### Возврат велосипеда
+```http
 POST /api/rentals/return/
 Authorization: Bearer <token>
+```
 
 #### Получение истории аренды пользователя
+```http
 GET /api/rentals/history/
 Authorization: Bearer <token>
+```
